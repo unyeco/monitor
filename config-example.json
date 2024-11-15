@@ -1,0 +1,15 @@
+{
+    "googleAPI": {
+        "enabled": true,
+        "credentialsPath": "credentials.json",
+        "sheetName": "My Crypto Balances",
+        "dataTabName": "Balances",
+        "chartTabName": "Chart",
+        "frequency": "1m",
+        "trimmingRules": {
+            "afterWeek": "1h",
+            "afterMonth": "1d"
+        }
+    },
+    "accountEmail": "myname@gmail.com"
+}

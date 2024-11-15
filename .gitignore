@@ -3,6 +3,8 @@ node_modules/
 
 # Keys file
 keys.json
+config.json
+credentials.json
 
 # Optional: Add other files or folders to ignore
 .DS_Store
