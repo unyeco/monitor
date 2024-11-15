@@ -1,0 +1,11 @@
+# Node modules folder
+node_modules/
+
+# Keys file
+keys.json
+
+# Optional: Add other files or folders to ignore
+.DS_Store
+.env
+dist/
+

@@ -1,0 +1,30 @@
+[
+    {
+        "n": "Coinbase 1",
+        "e": "coinbase",
+        "k": "aaa",
+        "p": "bbb",
+        "baseCurrency": "USDC",
+        "options": {}
+    },
+    {
+        "n": "Gateio 2",
+        "e": "gateio",
+        "k": "xxx",
+        "p": "yyy",
+        "baseCurrency": "USDT",
+        "options": {
+            "defaultType": "spot"
+        }
+    },
+    {
+        "n": "Gateio 2",
+        "e": "gateio",
+        "k": "xxx",
+        "p": "yyy",
+        "baseCurrency": "USDT",
+        "options": {
+            "defaultType": "swap"
+        }
+    }
+]
