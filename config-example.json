@@ -1,4 +1,32 @@
 {
+    "colors": {
+        "leftMarginSize": 0,
+        "borderColor": "dim.gray",
+        "accountNameColor": "cyan",
+        "spotSymbolColor": "green",
+        "futuresSymbolColor": "red",
+        "defaultSymbolColor": "white",
+        "amountColor": "green",
+        "accountTotalColor": "cyanBright",
+        "grandTotalColor": "white",
+        "baseCurrencySymbolStyle": "bold",
+        "futurePos": "green",
+        "futureNeg": "red",
+        "pnlPositive": "dim.green",
+        "pnlNegative": "dim.red",
+        "pnlLabelColor": "#0a0a0a"
+    },
+    "pnl": {
+        "enabled": true,
+        "Coinbase 1": {
+            "start": "2024-11-15 12:34:00",
+            "balance": 5000
+        },
+        "Gateio 2": {
+            "start": "2024-11-14 07:00:00",
+            "balance": 1000
+        }
+    },
     "googleAPI": {
         "enabled": true,
         "credentialsPath": "credentials.json",
