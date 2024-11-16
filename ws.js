@@ -1,3 +1,4 @@
+// ws.js
 const ccxt = require('ccxt');
 
 // Function to monitor balances

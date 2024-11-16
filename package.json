@@ -1,6 +1,7 @@
 {
   "dependencies": {
-    "ccxt": "^4.4.30",
-    "chalk": "^4.1.2"
+    "ccxt": "^4.4.31",
+    "chalk": "^4.1.2",
+    "googleapis": "^144.0.0"
   }
 }
