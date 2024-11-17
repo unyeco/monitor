@@ -232,7 +232,7 @@ async function processBalanceData(exchange, balanceData, groupName, balancesObj,
         } catch (e) {
             if (e.message.includes('requires a "portfolio" value')) {
                 // Gracefully handle the missing portfolio error
-                console.warn(`Coinbase fetchPositions requires a portfolio. Skipping positions for ${exchange.id}.`);
+                // console.warn(`Coinbase fetchPositions requires a portfolio. Skipping positions for ${exchange.id}.`);
             } else {
                 console.error(`Error fetching positions: ${e.message}`);
             }

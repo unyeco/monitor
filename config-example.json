@@ -1,6 +1,6 @@
 {
     "pnl": {
-        "enabled": false,
+        "enabled": true,
         "Account 1": {
             "start": "2024-11-15 12:34:00",
             "balance": 5000
@@ -11,7 +11,7 @@
         }
     },
     "table": {
-        "enabled": true,
+        "enabled": false,
         "colors": {
             "leftMarginSize": 0,
             "borderColor": "dim.gray",
@@ -40,14 +40,12 @@
         "accountEmail": "myname@gmail.com"
     },
     "tg": {
-        "enabled": false,
+        "enabled": true,
         "token": "xxx",
-        "adminChat": "-4567890123",
-        "adminMessageId": null,
-        "userMessages": {},
+        "adminChat": -4567890123,
         "users": [
             {
-                "id": "65432101",
+                "id": 65432101,
                 "user": "@username",
                 "name": "John",
                 "start": "2024-11-14 12:34:56",
@@ -56,7 +54,7 @@
                 "pool": "Account 2"
             },
             {
-                "id": "65432102",
+                "id": 65432102,
                 "user": "@username2",
                 "name": "Jane",
                 "start": "2024-11-14 12:34:56",
