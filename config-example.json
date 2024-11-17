@@ -1,4 +1,15 @@
 {
+    "pnl": {
+        "enabled": false,
+        "Account 1": {
+            "start": "2024-11-15 12:34:00",
+            "balance": 5000
+        },
+        "Account 2": {
+            "start": "2024-11-14 07:00:00",
+            "balance": 1000
+        }
+    },
     "table": {
         "enabled": true,
         "colors": {
@@ -17,17 +28,6 @@
             "pnlPositive": "dim.green",
             "pnlNegative": "dim.red",
             "pnlLabelColor": "#0a0a0a"            
-        },
-        "pnl": {
-            "enabled": false,
-            "Coinbase 1": {
-                "start": "2024-11-15 12:34:00",
-                "balance": 5000
-            },
-            "Gateio 2": {
-                "start": "2024-11-14 07:00:00",
-                "balance": 1000
-            }
         }
     },
     "sheets": {

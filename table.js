@@ -51,7 +51,10 @@ function render(balancesObj) {
 
     // Access table configurations
     const tableConfig = config.table || {};
-    const pnlEnabled = tableConfig.pnl && tableConfig.pnl.enabled;
+
+    // Access PNL configurations from top-level pnl
+    const pnlConfig = config.pnl || {};
+    const pnlEnabled = pnlConfig.enabled;
 
     // Parse color configurations from tableConfig
     const colors = tableConfig.colors || {};
@@ -159,7 +162,8 @@ function render(balancesObj) {
         let TPNL = null; // Total PNL
         let WPNL = null; // Weekly PNL
 
-        const exPnlConfig = pnlEnabled ? tableConfig.pnl[ex.exchange] : null;
+        // Access PNL configuration for this exchange/account from top-level pnl
+        const exPnlConfig = pnlEnabled ? pnlConfig[ex.exchange] : null;
 
         if (pnlEnabled && exPnlConfig && exPnlConfig.start && exPnlConfig.balance) {
             try {
