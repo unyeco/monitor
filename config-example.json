@@ -1,17 +1,21 @@
 {
     "pnl": {
-        "enabled": true,
+        "enabled": false,
         "Account 1": {
+            "icon": "💰",
+            "iconTerminal": true,
             "start": "2024-11-15 12:34:00",
             "balance": 5000
         },
         "Account 2": {
+            "icon": "💰",
+            "iconTerminal": true,
             "start": "2024-11-14 07:00:00",
             "balance": 1000
         }
     },
     "table": {
-        "enabled": false,
+        "enabled": true,
         "colors": {
             "leftMarginSize": 0,
             "borderColor": "dim.gray",
@@ -40,8 +44,10 @@
         "accountEmail": "myname@gmail.com"
     },
     "tg": {
-        "enabled": true,
+        "enabled": false,
         "token": "xxx",
+        "poolIcon": "💲",
+        "totalIcon": "💲",
         "adminChat": -4567890123,
         "users": [
             {

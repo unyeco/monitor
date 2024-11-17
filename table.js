@@ -1,4 +1,5 @@
 // table.js
+
 const chalk = require('chalk');
 const fs = require('fs');
 
@@ -72,7 +73,7 @@ function render(balancesObj) {
     const pnlNegative = parseChalkStyle(colors.pnlNegative || 'dim.red');
     const futurePos = parseChalkStyle(colors.futurePos || 'green');
     const futureNeg = parseChalkStyle(colors.futureNeg || 'red');
-    const pnlLabelColor = parseChalkStyle(colors.pnlLabelColor || 'dim.gray');
+    const pnlLabelColor = parseChalkStyle(colors.pnlLabelColor || 'dim.gray');            
 
     // Left margin (number of spaces to add at the beginning of each line)
     const leftMarginSize = colors.leftMarginSize || 0;
@@ -99,7 +100,27 @@ function render(balancesObj) {
             output += leftMargin + borderColor('├' + '─'.repeat(lineLength - 3) + '┤\n');
         }
 
-        output += leftMargin + borderColor('│ ') + accountNameColor(exchangeName) + borderColor(' │\n'); // Account name
+        // *** Start of Refactored Section ***
+        // Determine the appropriate icon for the pool
+        let icon = '';
+        if (pnlEnabled && pnlConfig[ex.exchange] && pnlConfig[ex.exchange].icon && pnlConfig[ex.exchange].iconTerminal) {
+            // First Priority: Per-pool icon from pnl section
+            icon = pnlConfig[ex.exchange].icon;
+        } else if (config.tg && config.tg.poolIcon) {
+            // Second Priority: Global poolIcon from tg section
+            icon = config.tg.poolIcon;
+        }
+        // Else, no icon
+
+        // Format the exchange name with the determined icon
+        const formattedExchangeName = icon ? `${icon} ${ex.exchange}` : `${ex.exchange}`;
+
+        // Apply color to the account name
+        const coloredExchangeName = accountNameColor(formattedExchangeName.padEnd(lineLength - 5, ' ').slice(0, lineLength - 5));
+
+        output += leftMargin + borderColor('│ ') + coloredExchangeName + borderColor(' │\n'); // Account name
+        // *** End of Refactored Section ***
+
         output += leftMargin + borderColor('├' + '──────' + '┬' + '──────────────' + '┤\n'); // Separator
 
         // Sort balances: baseCurrency at top, then by baseValue descending
@@ -110,7 +131,7 @@ function render(balancesObj) {
             } else if (b.symbol === ex.baseCurrency && a.symbol !== ex.baseCurrency) {
                 return 1;
             } else {
-                return b.baseValue - a.baseValue;
+                return (b.baseValue || 0) - (a.baseValue || 0);
             }
         });
 

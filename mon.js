@@ -1,6 +1,12 @@
 // mon.js
 
-// Suppress specific warnings
+/**
+ * Main Entry Point for Crypto Balance Monitor
+ * 
+ * Initializes modules based on the configuration and starts monitoring crypto balances.
+ */
+
+// Suppress specific deprecated warnings to maintain console cleanliness
 const originalEmitWarning = process.emitWarning;
 process.emitWarning = (warning, ...args) => {
     if (typeof warning === 'string' && warning.includes('The `punycode` module is deprecated')) {
@@ -18,7 +24,12 @@ let table = null;
 let sheets = null;
 let tg = null; // Telegram module
 
-// Function to safely load a JSON file
+/**
+ * Safely loads a JSON file.
+ * @param {string} filePath - Path to the JSON file.
+ * @param {Object} defaultValue - Default value if file read fails.
+ * @returns {Object} Parsed JSON content or default value.
+ */
 function loadJsonFile(filePath, defaultValue = {}) {
     try {
         return JSON.parse(fs.readFileSync(filePath, 'utf8'));
@@ -53,7 +64,7 @@ const balances = {};
 
 // Initialize Modules Based on `enabled` Flags
 
-// Initialize Table Module
+// Initialize Table Module if enabled
 if (config.table?.enabled) {
     try {
         table = require('./table');
@@ -64,7 +75,7 @@ if (config.table?.enabled) {
     }
 }
 
-// Initialize Sheets Module
+// Initialize Sheets Module if enabled
 if (config.sheets?.enabled) {
     try {
         sheets = require('./sheets'); // Ensure you have a sheets.js module
@@ -76,11 +87,11 @@ if (config.sheets?.enabled) {
     }
 }
 
-// Initialize Telegram (tg) Module
+// Initialize Telegram (tg) Module if enabled
 if (config.tg?.enabled) {
     try {
         tg = require('./tg'); // Ensure you have a tg.js module
-        tg.initialize(config.tg);
+        tg.initialize(config.tg, config.pnl); // Pass both tg and pnl configs
         console.log('Telegram module initialized.');
     } catch (error) {
         console.error('Error initializing Telegram module:', error.message);
@@ -88,7 +99,9 @@ if (config.tg?.enabled) {
     }
 }
 
-// Function to update balances and notify enabled modules
+/**
+ * Updates balances and notifies enabled modules.
+ */
 function updateAndRender() {
     // Render Table if enabled
     if (table) {
@@ -109,7 +122,7 @@ function updateAndRender() {
     }
 
     // Update Telegram if enabled
-    if (tg) {
+    if (tg && typeof tg.update === 'function') { // Ensure tg.update exists
         try {
             tg.update(balances);
         } catch (error) {
