@@ -9,11 +9,14 @@ process.emitWarning = (warning, ...args) => {
     originalEmitWarning(warning, ...args); // Allow other warnings
 };
 
-// Import required modules
+// Import required core modules
 const fs = require('fs');
 const ws = require('./ws');
-const table = require('./table');
-let sheets;
+
+// Initialize module variables
+let table = null;
+let sheets = null;
+let tg = null; // Telegram module
 
 // Function to safely load a JSON file
 function loadJsonFile(filePath, defaultValue = {}) {
@@ -26,9 +29,10 @@ function loadJsonFile(filePath, defaultValue = {}) {
 }
 
 // Load configuration and account files
-const config = loadJsonFile('config.json', { googleAPI: { enabled: false } });
+const config = loadJsonFile('config.json', {});
 const accounts = loadJsonFile('keys.json', []);
 
+// Validate presence of accounts
 if (accounts.length === 0) {
     console.error('No accounts found in keys.json. Exiting.');
     process.exit(1);
@@ -47,29 +51,73 @@ const groupedAccounts = accounts.reduce((acc, account) => {
 // Global balances object
 const balances = {};
 
-// Function to update balances and render table
-function updateAndRender() {
-    table.render(balances);
+// Initialize Modules Based on `enabled` Flags
 
-    // Write balances to Google Sheets if enabled and initialized
-    if (config.googleAPI?.enabled && sheets) {
+// Initialize Table Module
+if (config.table?.enabled) {
+    try {
+        table = require('./table');
+        console.log('Table module initialized.');
+    } catch (error) {
+        console.error('Error initializing Table module:', error.message);
+        table = null; // Disable table logic if initialization fails
+    }
+}
+
+// Initialize Sheets Module
+if (config.sheets?.enabled) {
+    try {
+        sheets = require('./sheets'); // Ensure you have a sheets.js module
+        sheets.initialize(config.sheets);
+        console.log('Sheets module initialized.');
+    } catch (error) {
+        console.error('Error initializing Sheets module:', error.message);
+        sheets = null; // Disable sheets logic if initialization fails
+    }
+}
+
+// Initialize Telegram (tg) Module
+if (config.tg?.enabled) {
+    try {
+        tg = require('./tg'); // Ensure you have a tg.js module
+        tg.initialize(config.tg);
+        console.log('Telegram module initialized.');
+    } catch (error) {
+        console.error('Error initializing Telegram module:', error.message);
+        tg = null; // Disable tg logic if initialization fails
+    }
+}
+
+// Function to update balances and notify enabled modules
+function updateAndRender() {
+    // Render Table if enabled
+    if (table) {
+        try {
+            table.render(balances);
+        } catch (error) {
+            console.error('Error rendering Table module:', error.message);
+        }
+    }
+
+    // Stream balances to Sheets if enabled
+    if (sheets) {
         try {
             sheets.streamBalances(balances);
         } catch (error) {
             console.error('Error streaming balances to Google Sheets:', error.message);
         }
     }
-}
 
-// Initialize Sheets if Google API is enabled
-if (config.googleAPI?.enabled) {
-    try {
-        sheets = require('./sheets'); // Dynamically require sheets module only if needed
-        sheets.initialize(config);
-    } catch (error) {
-        console.error('Error initializing Google Sheets:', error.message);
-        sheets = null; // Disable sheets logic if initialization fails
+    // Update Telegram if enabled
+    if (tg) {
+        try {
+            tg.update(balances);
+        } catch (error) {
+            console.error('Error updating Telegram module:', error.message);
+        }
     }
+
+    // Add additional modules here in the future following the same pattern
 }
 
 // Start monitoring balances

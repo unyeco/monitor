@@ -1,6 +1,6 @@
 [
     {
-        "n": "Coinbase 1",
+        "n": "Account 1",
         "e": "coinbase",
         "k": "aaa",
         "p": "bbb",
@@ -8,7 +8,7 @@
         "options": {}
     },
     {
-        "n": "Gateio 2",
+        "n": "Account 2",
         "e": "gateio",
         "k": "xxx",
         "p": "yyy",
@@ -18,7 +18,7 @@
         }
     },
     {
-        "n": "Gateio 2",
+        "n": "Account 2",
         "e": "gateio",
         "k": "xxx",
         "p": "yyy",

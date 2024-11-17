@@ -49,10 +49,12 @@ function render(balancesObj) {
         return;
     }
 
-    const pnlEnabled = config.pnl && config.pnl.enabled;
+    // Access table configurations
+    const tableConfig = config.table || {};
+    const pnlEnabled = tableConfig.pnl && tableConfig.pnl.enabled;
 
-    // Parse color configurations
-    const colors = config.colors || {};
+    // Parse color configurations from tableConfig
+    const colors = tableConfig.colors || {};
 
     const borderColor = parseChalkStyle(colors.borderColor || 'dim.gray');
     const accountNameColor = parseChalkStyle(colors.accountNameColor || 'cyan');
@@ -157,7 +159,7 @@ function render(balancesObj) {
         let TPNL = null; // Total PNL
         let WPNL = null; // Weekly PNL
 
-        const exPnlConfig = pnlEnabled ? config.pnl[ex.exchange] : null;
+        const exPnlConfig = pnlEnabled ? tableConfig.pnl[ex.exchange] : null;
 
         if (pnlEnabled && exPnlConfig && exPnlConfig.start && exPnlConfig.balance) {
             try {

@@ -2,6 +2,8 @@
   "dependencies": {
     "ccxt": "^4.4.31",
     "chalk": "^4.1.2",
-    "googleapis": "^144.0.0"
+    "googleapis": "^144.0.0",
+    "node-schedule": "^2.1.1",
+    "telegraf": "^4.16.3"
   }
 }

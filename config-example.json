@@ -1,43 +1,69 @@
 {
-    "colors": {
-        "leftMarginSize": 0,
-        "borderColor": "dim.gray",
-        "accountNameColor": "cyan",
-        "spotSymbolColor": "green",
-        "futuresSymbolColor": "red",
-        "defaultSymbolColor": "white",
-        "amountColor": "green",
-        "accountTotalColor": "cyanBright",
-        "grandTotalColor": "white",
-        "baseCurrencySymbolStyle": "bold",
-        "futurePos": "green",
-        "futureNeg": "red",
-        "pnlPositive": "dim.green",
-        "pnlNegative": "dim.red",
-        "pnlLabelColor": "#0a0a0a"
-    },
-    "pnl": {
+    "table": {
         "enabled": true,
-        "Coinbase 1": {
-            "start": "2024-11-15 12:34:00",
-            "balance": 5000
+        "colors": {
+            "leftMarginSize": 0,
+            "borderColor": "dim.gray",
+            "accountNameColor": "cyan",
+            "spotSymbolColor": "green",
+            "futuresSymbolColor": "red",
+            "defaultSymbolColor": "white",
+            "amountColor": "green",
+            "accountTotalColor": "cyanBright",
+            "grandTotalColor": "white",
+            "baseCurrencySymbolStyle": "bold",
+            "futurePos": "green",
+            "futureNeg": "red",
+            "pnlPositive": "dim.green",
+            "pnlNegative": "dim.red",
+            "pnlLabelColor": "#0a0a0a"            
         },
-        "Gateio 2": {
-            "start": "2024-11-14 07:00:00",
-            "balance": 1000
+        "pnl": {
+            "enabled": false,
+            "Coinbase 1": {
+                "start": "2024-11-15 12:34:00",
+                "balance": 5000
+            },
+            "Gateio 2": {
+                "start": "2024-11-14 07:00:00",
+                "balance": 1000
+            }
         }
     },
-    "googleAPI": {
-        "enabled": true,
+    "sheets": {
+        "enabled": false,
         "credentialsPath": "credentials.json",
         "sheetName": "My Crypto Balances",
         "dataTabName": "Balances",
         "chartTabName": "Chart",
-        "frequency": "1m",
-        "trimmingRules": {
-            "afterWeek": "1h",
-            "afterMonth": "1d"
-        }
+        "frequency": "30m",
+        "accountEmail": "myname@gmail.com"
     },
-    "accountEmail": "myname@gmail.com"
+    "tg": {
+        "enabled": false,
+        "token": "xxx",
+        "adminChat": "-4567890123",
+        "adminMessageId": null,
+        "userMessages": {},
+        "users": [
+            {
+                "id": "65432101",
+                "user": "@username",
+                "name": "John",
+                "start": "2024-11-14 12:34:56",
+                "balance": 8000,
+                "share": 0.8,
+                "pool": "Account 2"
+            },
+            {
+                "id": "65432102",
+                "user": "@username2",
+                "name": "Jane",
+                "start": "2024-11-14 12:34:56",
+                "balance": 2000,
+                "share": 0.2,
+                "pool": "Account 2"
+            }
+        ]
+    }
 }
