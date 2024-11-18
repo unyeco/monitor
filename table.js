@@ -69,8 +69,10 @@ function render(balancesObj) {
     const accountTotalColor = parseChalkStyle(colors.accountTotalColor || 'cyanBright');
     const grandTotalColor = parseChalkStyle(colors.grandTotalColor || 'white');
     const baseCurrencySymbolStyle = parseChalkStyle(colors.baseCurrencySymbolStyle || 'bold');
-    const pnlPositive = parseChalkStyle(colors.pnlPositive || 'dim.green');
-    const pnlNegative = parseChalkStyle(colors.pnlNegative || 'dim.red');
+    const pnlPositive = parseChalkStyle(colors.pnlPositive || 'green');
+    const pnlNegative = parseChalkStyle(colors.pnlNegative || 'red');
+    const wPnlPositive = parseChalkStyle(colors.wpnlPositive || 'dim.green');
+    const wPnlNegative = parseChalkStyle(colors.wpnlNegative || 'dim.red');
     const futurePos = parseChalkStyle(colors.futurePos || 'green');
     const futureNeg = parseChalkStyle(colors.futureNeg || 'red');
     const pnlLabelColor = parseChalkStyle(colors.pnlLabelColor || 'dim.gray');            
@@ -228,19 +230,11 @@ function render(balancesObj) {
             }
         }
 
-        // Output PNL lines if available
+        // **Start of Refactored Rendering Section**
         const valueWidth = col2Width - 2;
         const exLabelWidth = col1Width - 1;
 
-        if (WPNL !== null) {
-            let wpnLabel = 'W:'.padEnd(exLabelWidth, ' ');
-            let wpnValue = (WPNL.value >= 0 ? '+' : '') + WPNL.formatted + '%';
-            wpnValue = wpnValue.padStart(valueWidth, ' ');
-
-            output += leftMargin + borderColor('│ ') + pnlLabelColor(wpnLabel) + borderColor('│ ') +
-                getPnlColor(WPNL.value, pnlPositive, pnlNegative)(wpnValue) + borderColor(' │\n');
-        }
-
+        // **Render P: line first**
         if (TPNL !== null) {
             let tpnLabel = 'P:'.padEnd(exLabelWidth, ' ');
             let tpnValue = (TPNL.value >= 0 ? '+' : '') + TPNL.formatted + '%';
@@ -249,6 +243,17 @@ function render(balancesObj) {
             output += leftMargin + borderColor('│ ') + pnlLabelColor(tpnLabel) + borderColor('│ ') +
                 getPnlColor(TPNL.value, pnlPositive, pnlNegative)(tpnValue) + borderColor(' │\n');
         }
+
+        // **Then render W: line with dimmed colors**
+        if (WPNL !== null) {
+            let wpnLabel = 'W:'.padEnd(exLabelWidth, ' ');
+            let wpnValue = (WPNL.value >= 0 ? '+' : '') + WPNL.formatted + '%';
+            wpnValue = wpnValue.padStart(valueWidth, ' ');
+
+            output += leftMargin + borderColor('│ ') + pnlLabelColor(wpnLabel) + borderColor('│ ') +
+                getPnlColor(WPNL.value, wPnlPositive, wPnlNegative)(wpnValue) + borderColor(' │\n');
+        }
+        // **End of Refactored Rendering Section**
     }
 
     // Footer
@@ -282,17 +287,8 @@ function render(balancesObj) {
         };
     }
 
-    // Output grand total PNL lines if available
-    if (grandWeeklyPnl) {
-        let wpnLabel = 'W:'.padEnd(labelWidth, ' ');
-        let wpnValue = (grandWeeklyPnl.value >= 0 ? '+' : '') + grandWeeklyPnl.formatted + '%';
-        wpnValue = wpnValue.padStart(totalWidth - labelWidth - 4, ' ');
-
-        output += leftMargin + borderColor('│ ') + pnlLabelColor(wpnLabel) +
-            getPnlColor(grandWeeklyPnl.value, pnlPositive, pnlNegative)(wpnValue) + borderColor(' │\n');
-    }
-
-    if (grandTotalPnl) {
+    // **Start of Refactored Grand Total PNL Rendering**
+    if (grandTotalPnl !== null) {
         let tpnLabel = 'P:'.padEnd(labelWidth, ' ');
         let tpnValue = (grandTotalPnl.value >= 0 ? '+' : '') + grandTotalPnl.formatted + '%';
         tpnValue = tpnValue.padStart(totalWidth - labelWidth - 4, ' ');
@@ -300,6 +296,16 @@ function render(balancesObj) {
         output += leftMargin + borderColor('│ ') + pnlLabelColor(tpnLabel) +
             getPnlColor(grandTotalPnl.value, pnlPositive, pnlNegative)(tpnValue) + borderColor(' │\n');
     }
+
+    if (grandWeeklyPnl !== null) {
+        let wpnLabel = 'W:'.padEnd(labelWidth, ' ');
+        let wpnValue = (grandWeeklyPnl.value >= 0 ? '+' : '') + grandWeeklyPnl.formatted + '%';
+        wpnValue = wpnValue.padStart(totalWidth - labelWidth - 4, ' ');
+
+        output += leftMargin + borderColor('│ ') + pnlLabelColor(wpnLabel) +
+            getPnlColor(grandWeeklyPnl.value, wPnlPositive, wPnlNegative)(wpnValue) + borderColor(' │\n');
+    }
+    // **End of Refactored Grand Total PNL Rendering**
 
     output += leftMargin + borderColor('└' + '─'.repeat(totalWidth - 2) + '┘\n');
 
