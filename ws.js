@@ -1,4 +1,5 @@
 // ws.js
+
 const ccxt = require('ccxt');
 
 // Function to monitor balances
@@ -98,7 +99,9 @@ async function fetchCompleteBalance(exchange) {
 
             balanceData.total = totalBalances;
         } else if (exchange.id === 'gateio') {
-            balanceData = await exchange.fetchBalance({ type: 'swap' });
+            // Use the defaultType from account options (spot or swap)
+            const type = exchange.options?.defaultType || 'swap';
+            balanceData = await exchange.fetchBalance({ type });
         } else {
             balanceData = await exchange.fetchBalance();
         }
@@ -200,8 +203,8 @@ async function processBalanceData(exchange, balanceData, groupName, balancesObj,
         };
     }
 
-    // Include futures positions if applicable
-    if (exchange.has['fetchPositions']) {
+    // Include futures positions only if defaultType is 'swap'
+    if (exchange.has['fetchPositions'] && exchange.options?.defaultType === 'swap') {
         try {
             const positions = await exchange.fetchPositions();
             for (const position of positions) {
@@ -232,7 +235,6 @@ async function processBalanceData(exchange, balanceData, groupName, balancesObj,
         } catch (e) {
             if (e.message.includes('requires a "portfolio" value')) {
                 // Gracefully handle the missing portfolio error
-                // console.warn(`Coinbase fetchPositions requires a portfolio. Skipping positions for ${exchange.id}.`);
             } else {
                 console.error(`Error fetching positions: ${e.message}`);
             }
@@ -333,6 +335,44 @@ async function compileAndUpdateBalances(exchange, balanceData, groupName, balanc
             baseValue,
             type: assetType,
         };
+    }
+
+    // Include futures positions only if defaultType is 'swap'
+    if (exchange.has['fetchPositions'] && exchange.options?.defaultType === 'swap') {
+        try {
+            const positions = await exchange.fetchPositions();
+            for (const position of positions) {
+                if (position.contracts !== 0) {
+                    const market = exchange.markets[position.symbol];
+                    if (market) {
+                        let ticker = await exchange.fetchTicker(position.symbol);
+                        const price = ticker.last || ticker.close;
+                        const UPNL = position.unrealizedPnl || 0;
+
+                        // Skip positions with baseValue less than $0.01
+                        if (Math.abs(UPNL) < 0.01) {
+                            continue;
+                        }
+
+                        const symbol = position.symbol;
+                        const assetKey = symbol;
+
+                        newAssets[assetKey] = {
+                            symbol,
+                            amount: position.contracts,
+                            baseValue: UPNL,
+                            type: 'futures',
+                        };
+                    }
+                }
+            }
+        } catch (e) {
+            if (e.message.includes('requires a "portfolio" value')) {
+                // Gracefully handle the missing portfolio error
+            } else {
+                console.error(`Error fetching positions: ${e.message}`);
+            }
+        }
     }
 
     // Update balancesObj[groupName].balances
