@@ -19,12 +19,10 @@ function parseChalkStyle(styleString) {
     let style = chalk;
     for (let part of styleParts) {
         if (part.startsWith('#')) {
-            // If part is a hex color code
             style = style.hex(part);
         } else if (style[part]) {
             style = style[part];
         } else {
-            // If the style is not recognized, return the default chalk style
             console.warn(`Warning: Unrecognized style "${part}" in "${styleString}". Using default style.`);
             return chalk;
         }
@@ -32,11 +30,13 @@ function parseChalkStyle(styleString) {
     return style;
 }
 
+const fundValueColor = parseChalkStyle('green'); // dark green for Earn and Spot values
+
 function render(balancesObj) {
     const col1Width = 6; // Width of the symbol column including padding
     const col2Width = 14; // Width of the amount column including padding
 
-    const totalWidth = col1Width + col2Width + 3; // 6 + 14 + 3 = 23 (including borders and spaces)
+    const totalWidth = col1Width + col2Width + 3; // Total width including borders and spaces
     const labelWidth = 4; // Width for labels like 'W:' or 'P:'
 
     let output = '';
@@ -59,11 +59,12 @@ function render(balancesObj) {
 
     // Parse color configurations from tableConfig
     const colors = tableConfig.colors || {};
-
+    
+    
     const borderColor = parseChalkStyle(colors.borderColor || 'dim.gray');
     const accountNameColor = parseChalkStyle(colors.accountNameColor || 'cyan');
     const spotSymbolColor = parseChalkStyle(colors.spotSymbolColor || 'green');
-    const futuresSymbolColor = parseChalkStyle(colors.futuresSymbolColor || 'red');
+    const futuresSymbolColor = parseChalkStyle(colors.futuresSymbolColor || 'dim.green');
     const defaultSymbolColor = parseChalkStyle(colors.defaultSymbolColor || 'white');
     const amountColor = parseChalkStyle(colors.amountColor || 'green');
     const accountTotalColor = parseChalkStyle(colors.accountTotalColor || 'cyanBright');
@@ -75,13 +76,13 @@ function render(balancesObj) {
     const wPnlNegative = parseChalkStyle(colors.wpnlNegative || 'dim.red');
     const futurePos = parseChalkStyle(colors.futurePos || 'green');
     const futureNeg = parseChalkStyle(colors.futureNeg || 'red');
-    const pnlLabelColor = parseChalkStyle(colors.pnlLabelColor || 'dim.gray');            
+    const pnlLabelColor = parseChalkStyle(colors.pnlLabelColor || 'dim.gray');
+    const fundLabelColor = parseChalkStyle(colors.fundLabelColor || 'dim.green');
+    const fundValueColor = parseChalkStyle(colors.fundValueColor || 'dim.green');
 
-    // Left margin (number of spaces to add at the beginning of each line)
     const leftMarginSize = colors.leftMarginSize || 0;
     const leftMargin = ' '.repeat(leftMarginSize);
 
-    // Initialize grand total variables
     let grandTotalStartBalance = 0;
     let grandTotalCurrentBalance = 0;
     let earliestStartTime = null;
@@ -89,41 +90,29 @@ function render(balancesObj) {
     let firstExchange = true;
 
     for (let ex of Object.values(balancesObj)) {
-        // Ensure each line is the same length
-        const lineLength = totalWidth + 1; // +1 for the extra character in the bottom line
+        const lineLength = totalWidth + 1; // Ensuring consistent line length
 
         // Exchange header
-        let exchangeName = ex.exchange.padEnd(lineLength - 5, ' '); // Adjusted padding to remove extra spaces
-
+        let exchangeName = ex.exchange.padEnd(lineLength - 5, ' ');
         if (firstExchange) {
-            output += leftMargin + borderColor('┌' + '─'.repeat(lineLength - 3) + '┐\n'); // Top border
+            output += leftMargin + borderColor('┌' + '─'.repeat(lineLength - 3) + '┐\n');
             firstExchange = false;
         } else {
             output += leftMargin + borderColor('├' + '─'.repeat(lineLength - 3) + '┤\n');
         }
 
-        // *** Start of Refactored Section ***
         // Determine the appropriate icon for the pool
         let icon = '';
         if (pnlEnabled && pnlConfig[ex.exchange] && pnlConfig[ex.exchange].icon && pnlConfig[ex.exchange].iconTerminal) {
-            // First Priority: Per-pool icon from pnl section
             icon = pnlConfig[ex.exchange].icon;
         } else if (config.tg && config.tg.poolIcon) {
-            // Second Priority: Global poolIcon from tg section
             icon = config.tg.poolIcon;
         }
-        // Else, no icon
-
-        // Format the exchange name with the determined icon
         const formattedExchangeName = icon ? `${icon} ${ex.exchange}` : `${ex.exchange}`;
-
-        // Apply color to the account name
         const coloredExchangeName = accountNameColor(formattedExchangeName.padEnd(lineLength - 5, ' ').slice(0, lineLength - 5));
 
-        output += leftMargin + borderColor('│ ') + coloredExchangeName + borderColor(' │\n'); // Account name
-        // *** End of Refactored Section ***
-
-        output += leftMargin + borderColor('├' + '──────' + '┬' + '──────────────' + '┤\n'); // Separator
+        output += leftMargin + borderColor('│ ') + coloredExchangeName + borderColor(' │\n');
+        output += leftMargin + borderColor('├' + '──────' + '┬' + '──────────────' + '┤\n');
 
         // Sort balances: baseCurrency at top, then by baseValue descending
         let balancesArray = Object.values(ex.balances);
@@ -137,7 +126,7 @@ function render(balancesObj) {
             }
         });
 
-        // Balances
+        // Render balance rows
         for (let asset of balancesArray) {
             let symbolColor;
             if (asset.type === 'spot') {
@@ -149,7 +138,6 @@ function render(balancesObj) {
             }
 
             let amountStr = formatNumber(asset.baseValue);
-
             let symbolStr = asset.symbol.padEnd(col1Width - 1, ' ').slice(0, col1Width - 1);
             let amountFormatted = amountStr.padStart(col2Width - 2, ' ');
 
@@ -157,7 +145,6 @@ function render(balancesObj) {
                 symbolStr = baseCurrencySymbolStyle(symbolStr);
                 amountFormatted = baseCurrencySymbolStyle(amountFormatted);
             } else if (asset.type === 'futures') {
-                // Apply futurePos or futureNeg color based on the value
                 let valueColor = asset.baseValue >= 0 ? futurePos : futureNeg;
                 amountFormatted = valueColor(amountFormatted);
             } else {
@@ -171,21 +158,15 @@ function render(balancesObj) {
                 borderColor(' │\n');
         }
 
-        // Added line above the per exchange total
         output += leftMargin + borderColor('│      ├' + '─'.repeat(col2Width) + '┤\n');
 
-        // Total per exchange
         let totalStr = formatNumber(ex.total);
-        let totalFormatted = accountTotalColor(totalStr.padStart(col2Width - 2, ' ')); // Total in light blue
-
-        // Added one extra space in the first column for the total line
+        let totalFormatted = accountTotalColor(totalStr.padStart(col2Width - 2, ' '));
         output += leftMargin + borderColor('│  ' + ' '.repeat(col1Width - 2) + '│ ') + totalFormatted + borderColor(' │\n');
 
         // PNL Calculations per exchange
-        let TPNL = null; // Total PNL
-        let WPNL = null; // Weekly PNL
-
-        // Access PNL configuration for this exchange/account from top-level pnl
+        let TPNL = null;
+        let WPNL = null;
         const exPnlConfig = pnlEnabled ? pnlConfig[ex.exchange] : null;
 
         if (pnlEnabled && exPnlConfig && exPnlConfig.start && exPnlConfig.balance) {
@@ -195,14 +176,12 @@ function render(balancesObj) {
                     throw new Error('Invalid start time');
                 }
                 const currentTime = new Date();
-                const secondsSinceStart = (currentTime - startTime) / 1000; // in seconds
+                const secondsSinceStart = (currentTime - startTime) / 1000;
 
                 const startBalance = parseFloat(exPnlConfig.balance);
                 const currentBalance = ex.total;
 
-                if (isNaN(startBalance) || isNaN(currentBalance) || startBalance === 0 || secondsSinceStart <= 0) {
-                    // Cannot calculate PNL
-                } else {
+                if (!(isNaN(startBalance) || isNaN(currentBalance) || startBalance === 0 || secondsSinceStart <= 0)) {
                     const totalPnlValue = ((currentBalance - startBalance) / startBalance) * 100;
                     const weeklyPnlValue = (604800 / secondsSinceStart) * totalPnlValue;
 
@@ -215,27 +194,29 @@ function render(balancesObj) {
                         formatted: weeklyPnlValue.toFixed(2)
                     };
 
-                    // Sum up for grand total calculations
                     grandTotalStartBalance += startBalance;
-                    grandTotalCurrentBalance += currentBalance;
+                    // For grand total, add extra fund balances if available
+                    let adjustedCurrent = currentBalance;
+                    if (ex.hasOwnProperty('spotBalance')) {
+                        adjustedCurrent += ex.spotBalance;
+                    }
+                    if (ex.hasOwnProperty('earnBalance')) {
+                        adjustedCurrent += ex.earnBalance;
+                    }
+                    grandTotalCurrentBalance += adjustedCurrent;
 
-                    // Find the earliest start time
                     if (!earliestStartTime || startTime < earliestStartTime) {
                         earliestStartTime = startTime;
                     }
                 }
             } catch (err) {
                 console.error(`Error calculating PNL for ${ex.exchange}:`, err);
-                // Cannot calculate PNL
             }
         }
 
-        // **Start of Refactored Rendering Section**
-        const valueWidth = col2Width - 2;
-        const exLabelWidth = col1Width - 1;
-
-        // **Render P: line first**
         if (TPNL !== null) {
+            const valueWidth = col2Width - 2;
+            const exLabelWidth = col1Width - 1;
             let tpnLabel = 'P:'.padEnd(exLabelWidth, ' ');
             let tpnValue = (TPNL.value >= 0 ? '+' : '') + TPNL.formatted + '%';
             tpnValue = tpnValue.padStart(valueWidth, ' ');
@@ -244,27 +225,38 @@ function render(balancesObj) {
                 getPnlColor(TPNL.value, pnlPositive, pnlNegative)(tpnValue) + borderColor(' │\n');
         }
 
-        /* **Then render W: line with dimmed colors**
-        if (WPNL !== null) {
-            let wpnLabel = 'W:'.padEnd(exLabelWidth, ' ');
-            let wpnValue = (WPNL.value >= 0 ? '+' : '') + WPNL.formatted + '%';
-            wpnValue = wpnValue.padStart(valueWidth, ' ');
-
-            output += leftMargin + borderColor('│ ') + pnlLabelColor(wpnLabel) + borderColor('│ ') +
-                getPnlColor(WPNL.value, wPnlPositive, wPnlNegative)(wpnValue) + borderColor(' │\n');
+        // --- New: Render extra Fund lines if available ---
+        if (ex.hasOwnProperty('spotBalance') || ex.hasOwnProperty('earnBalance')) {
+            // Add a blank line
+            output += leftMargin + borderColor('│' + ' '.repeat(totalWidth - 2) + '│\n');
+            // Reduce overall content width by 2 chars for proper sizing
+            const contentWidth = (totalWidth - 2) - 2;
+            const extraLabelWidth = 8;
+            const extraValueWidth = contentWidth - extraLabelWidth;
+            if (ex.hasOwnProperty('earnBalance')) {
+                let label = 'EARN';
+                let labelFormatted = fundLabelColor(label.padEnd(extraLabelWidth, ' '));
+                let valueFormatted = fundValueColor(formatNumber(ex.earnBalance).padStart(extraValueWidth, ' '));
+                output += leftMargin + borderColor('│ ') + labelFormatted + valueFormatted + borderColor(' │\n');
+            }
+            if (ex.hasOwnProperty('spotBalance')) {
+                let label = 'SPOT';
+                let labelFormatted = fundLabelColor(label.padEnd(extraLabelWidth, ' '));
+                let valueFormatted = fundValueColor(formatNumber(ex.spotBalance).padStart(extraValueWidth, ' '));
+                output += leftMargin + borderColor('│ ') + labelFormatted + valueFormatted + borderColor(' │\n');
+            }
         }
-        // **End of Refactored Rendering Section**/
     }
 
     // Footer
     output += leftMargin + borderColor('├' + '─'.repeat(totalWidth - 2) + '┤\n');
 
-    // Grand total line
-    let grandTotalValue = Object.values(balancesObj).reduce((sum, ex) => sum + ex.total, 0);
+    let grandTotalValue = Object.values(balancesObj).reduce((sum, ex) => {
+        return sum + ex.total + (ex.spotBalance || 0) + (ex.earnBalance || 0);
+    }, 0);
     let grandTotalStr = formatNumber(grandTotalValue);
     output += leftMargin + borderColor('│ ') + 'T:'.padEnd(labelWidth, ' ') + grandTotalColor(grandTotalStr.padStart(totalWidth - labelWidth - 4, ' ')) + borderColor(' │\n');
 
-    // Grand total PNL calculations
     let grandTotalPnl = null;
     let grandWeeklyPnl = null;
 
@@ -275,7 +267,6 @@ function render(balancesObj) {
         const grandTotalPnlValue = ((grandTotalCurrentBalance - grandTotalStartBalance) / grandTotalStartBalance) * 100;
         const grandWeeklyPnlValue = (604800 / totalSecondsSinceStart) * grandTotalPnlValue;
 
-        // Format to two decimal places
         grandTotalPnl = {
             value: grandTotalPnlValue,
             formatted: grandTotalPnlValue.toFixed(2)
@@ -287,7 +278,6 @@ function render(balancesObj) {
         };
     }
 
-    // **Start of Refactored Grand Total PNL Rendering**
     if (grandTotalPnl !== null) {
         let tpnLabel = 'P:'.padEnd(labelWidth, ' ');
         let tpnValue = (grandTotalPnl.value >= 0 ? '+' : '') + grandTotalPnl.formatted + '%';
@@ -296,17 +286,6 @@ function render(balancesObj) {
         output += leftMargin + borderColor('│ ') + pnlLabelColor(tpnLabel) +
             getPnlColor(grandTotalPnl.value, pnlPositive, pnlNegative)(tpnValue) + borderColor(' │\n');
     }
-
-    /* Grand WPNL
-    if (grandWeeklyPnl !== null) {
-        let wpnLabel = 'W:'.padEnd(labelWidth, ' ');
-        let wpnValue = (grandWeeklyPnl.value >= 0 ? '+' : '') + grandWeeklyPnl.formatted + '%';
-        wpnValue = wpnValue.padStart(totalWidth - labelWidth - 4, ' ');
-
-        output += leftMargin + borderColor('│ ') + pnlLabelColor(wpnLabel) +
-            getPnlColor(grandWeeklyPnl.value, wPnlPositive, wPnlNegative)(wpnValue) + borderColor(' │\n');
-    }
-    // **End of Refactored Grand Total PNL Rendering**/
 
     output += leftMargin + borderColor('└' + '─'.repeat(totalWidth - 2) + '┘\n');
 

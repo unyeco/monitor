@@ -1,23 +1,17 @@
 {
     "pnl": {
         "enabled": false,
-        "Account 1": {
+        "Coinbase": {
             "icon": "💰",
             "iconTerminal": true,
-            "start": "2024-11-15 12:34:00",
+            "start": "2025-03-01 12:34:56",
             "balance": 5000
         },
-        "Acc2 Spot": {
+        "Gate Fund": {
             "icon": "💰",
             "iconTerminal": true,
-            "start": "2024-11-14 07:00:00",
-            "balance": 1000
-        },
-        "Acc2 Future": {
-            "icon": "💰",
-            "iconTerminal": true,
-            "start": "2024-11-14 07:00:00",
-            "balance": 1000
+            "start": "2025-03-01 13:45:00",
+            "balance": 10000
         }
     },
     "table": {
@@ -37,7 +31,9 @@
             "futureNeg": "red",
             "pnlPositive": "dim.green",
             "pnlNegative": "dim.red",
-            "pnlLabelColor": "#0a0a0a"            
+            "pnlLabelColor": "#0a0a0a",
+            "fundLabelColor": "dim.gray",
+            "fundValueColor": "dim.green"
         }
     },
     "sheets": {

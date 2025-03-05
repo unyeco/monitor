@@ -21,6 +21,11 @@ async function monitorBalances(account, groupName, balancesObj, callback) {
         password: account.password || undefined,
     });
 
+    // Mark as Fund account if the account name ends with " Fund" and defaultType is "swap"
+    if (account.n.endsWith(' Fund') && account.options?.defaultType === 'swap') {
+        exchange.isFundAccount = true;
+    }
+
     // Initialize groupBalances entry if not exists
     if (!balancesObj[groupName]) {
         balancesObj[groupName] = {
@@ -129,14 +134,13 @@ async function processBalanceData(exchange, balanceData, groupName, balancesObj,
         }
     }
 
-    // Now, process balanceCache to update assets
+    // Process balanceCache to update assets
     for (const [currency, amount] of Object.entries(balanceCache)) {
         let baseValue = amount;
         let symbol = currency;
         let assetType = 'spot';
 
         if (currency !== baseCurrency) {
-            // Fetch fresh ticker each time
             let marketId = null;
             let invertPrice = false;
 
@@ -189,7 +193,6 @@ async function processBalanceData(exchange, balanceData, groupName, balancesObj,
             baseValue = amount;
         }
 
-        // Skip assets with baseValue less than $0.01
         if (Math.abs(baseValue) < 0.01) {
             continue;
         }
@@ -215,7 +218,6 @@ async function processBalanceData(exchange, balanceData, groupName, balancesObj,
                         const price = ticker.last || ticker.close;
                         const UPNL = position.unrealizedPnl || 0;
 
-                        // Skip positions with baseValue less than $0.01
                         if (Math.abs(UPNL) < 0.01) {
                             continue;
                         }
@@ -241,11 +243,30 @@ async function processBalanceData(exchange, balanceData, groupName, balancesObj,
         }
     }
 
-    // Update balancesObj[groupName].balances
+    // Update balances and total for this group
     balancesObj[groupName].balances = newAssets;
-
-    // Update total for this group
     balancesObj[groupName].total = Object.values(newAssets).reduce((acc, curr) => acc + curr.baseValue, 0);
+
+    // --- New: Additional Fund account logic ---
+    if (exchange.isFundAccount) {
+        let spotBalance = 0;
+        let earnBalance = 0;
+        try {
+            const spotData = await exchange.fetchBalance({ type: 'spot' });
+            spotBalance = spotData.total[balancesObj[groupName].baseCurrency] || 0;
+        } catch (e) {
+            console.error(`Error fetching spot balance for ${exchange.id} fund account: ${e.message}`);
+        }
+        if (exchange.id === 'gateio') {
+            try {
+                earnBalance = await fetchGateioEarnBalance(exchange);
+            } catch (e) {
+                console.error(`Error fetching earn balance for ${exchange.id} fund account: ${e.message}`);
+            }
+        }
+        balancesObj[groupName].spotBalance = spotBalance;
+        balancesObj[groupName].earnBalance = earnBalance;
+    }
 }
 
 // Function to compile WebSocket balances and update in one go
@@ -261,7 +282,6 @@ async function compileAndUpdateBalances(exchange, balanceData, groupName, balanc
         }
     }
 
-    // Now, process balanceCache to update assets
     const newAssets = {};
 
     for (const [currency, amount] of Object.entries(balanceCache)) {
@@ -270,7 +290,6 @@ async function compileAndUpdateBalances(exchange, balanceData, groupName, balanc
         let assetType = 'spot';
 
         if (currency !== balancesObj[groupName].baseCurrency) {
-            // Fetch fresh ticker each time
             let marketId = null;
             let invertPrice = false;
 
@@ -323,7 +342,6 @@ async function compileAndUpdateBalances(exchange, balanceData, groupName, balanc
             baseValue = amount;
         }
 
-        // Skip assets with baseValue less than $0.01
         if (Math.abs(baseValue) < 0.01) {
             continue;
         }
@@ -349,7 +367,6 @@ async function compileAndUpdateBalances(exchange, balanceData, groupName, balanc
                         const price = ticker.last || ticker.close;
                         const UPNL = position.unrealizedPnl || 0;
 
-                        // Skip positions with baseValue less than $0.01
                         if (Math.abs(UPNL) < 0.01) {
                             continue;
                         }
@@ -375,11 +392,30 @@ async function compileAndUpdateBalances(exchange, balanceData, groupName, balanc
         }
     }
 
-    // Update balancesObj[groupName].balances
+    // Update balances and total for this group
     balancesObj[groupName].balances = newAssets;
-
-    // Update total for this group
     balancesObj[groupName].total = Object.values(newAssets).reduce((acc, curr) => acc + curr.baseValue, 0);
+
+    // --- New: Additional Fund account logic ---
+    if (exchange.isFundAccount) {
+        let spotBalance = 0;
+        let earnBalance = 0;
+        try {
+            const spotData = await exchange.fetchBalance({ type: 'spot' });
+            spotBalance = spotData.total[balancesObj[groupName].baseCurrency] || 0;
+        } catch (e) {
+            console.error(`Error fetching spot balance for ${exchange.id} fund account: ${e.message}`);
+        }
+        if (exchange.id === 'gateio') {
+            try {
+                earnBalance = await fetchGateioEarnBalance(exchange);
+            } catch (e) {
+                console.error(`Error fetching earn balance for ${exchange.id} fund account: ${e.message}`);
+            }
+        }
+        balancesObj[groupName].spotBalance = spotBalance;
+        balancesObj[groupName].earnBalance = earnBalance;
+    }
 }
 
 // Function to fetch price from an alternative exchange (e.g., Binance)
@@ -413,6 +449,39 @@ async function fetchPriceFromAlternativeExchange(currency, baseCurrency) {
         }
     }
     return null;
+}
+
+// --- New: Custom function to fetch Gate.io Earn balance ---
+async function fetchGateioEarnBalance(exchange) {
+    try {
+        await exchange.loadMarkets(); // Ensure markets are loaded
+
+        const response = await exchange.privateEarnGetUniLends({});
+        let totalUSDTValue = 0;
+
+        for (const lend of response) {
+            const currency = lend.currency;
+            const amount = parseFloat(lend.amount);
+
+            if (amount > 0) {
+                if (currency === 'USDT' || currency === 'USDC') {
+                    totalUSDTValue += amount;
+                } else {
+                    try {
+                        const ticker = await exchange.fetchTicker(`${currency}/USDT`);
+                        totalUSDTValue += amount * parseFloat(ticker.last);
+                    } catch (err) {
+                        continue; // Skip assets without a valid price
+                    }
+                }
+            }
+        }
+
+        return totalUSDTValue;
+    } catch (error) {
+        console.error('Error fetching Earn balance:', error);
+        return 0; // Return 0 on failure
+    }
 }
 
 // Sleep function

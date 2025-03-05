@@ -1,6 +1,6 @@
 [
     {
-        "n": "Account 1",
+        "n": "Coinbase",
         "e": "coinbase",
         "k": "aaa",
         "p": "bbb",
@@ -8,17 +8,7 @@
         "options": {}
     },
     {
-        "n": "Acc2 Spot",
-        "e": "gateio",
-        "k": "xxx",
-        "p": "yyy",
-        "baseCurrency": "USDT",
-        "options": {
-            "defaultType": "spot"
-        }
-    },
-    {
-        "n": "Acc2 Future",
+        "n": "Gate Fund",
         "e": "gateio",
         "k": "xxx",
         "p": "yyy",
